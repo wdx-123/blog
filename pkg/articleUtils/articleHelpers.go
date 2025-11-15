@@ -1,12 +1,12 @@
 package articleUtils
 
 import (
-	"context"
-	"github.com/elastic/go-elasticsearch/v8/typedapi/core/search"
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/refresh"
-	"personal_blog/global"
-	"personal_blog/internal/model/elasticsearch"
+    "context"
+    "github.com/elastic/go-elasticsearch/v8/typedapi/core/search"
+    "github.com/elastic/go-elasticsearch/v8/typedapi/types"
+    "github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/refresh"
+    "personal_blog/global"
+    elasticsearch "personal_blog/internal/model/elasticsearch"
 )
 
 // CreateArticle 用于将文章创建到 Elasticsearch

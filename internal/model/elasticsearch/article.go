@@ -1,7 +1,9 @@
-package elasticsearch
+package esMODEL
 
 import (
+	"github.com/elastic/go-elasticsearch/v8/typedapi/core/search"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
+	"personal_blog/internal/model/dto/request"
 )
 
 // Article 文章表
@@ -23,6 +25,15 @@ type Article struct {
 	Likes    int `json:"likes"`    // 收藏量
 }
 
+// EsOption 搜索参数
+type EsOption struct {
+    request.PageInfo
+    Index          string          // 指定要查询的Elasticsearch索引
+    Request        *search.Request // Elasticsearch的搜索请求，包含查询条件、排序、高亮等
+    SourceIncludes []string        // 指定返回的字段，类似于SQL中的select指定列
+    IncludeContent bool            // 是否返回 content 字段，默认不返回
+}
+
 // ArticleIndex 文章 ES 索引
 func ArticleIndex() string {
 	return "article_index"
@@ -32,14 +43,22 @@ func ArticleIndex() string {
 func ArticleMapping() *types.TypeMapping {
 	return &types.TypeMapping{
 		Properties: map[string]types.Property{
-			"created_at": types.DateProperty{NullValue: nil, Format: func(s string) *string { return &s }("yyyy-MM-dd HH:mm:ss")},
-			"updated_at": types.DateProperty{NullValue: nil, Format: func(s string) *string { return &s }("yyyy-MM-dd HH:mm:ss")},
+			"created_at": types.DateProperty{
+				NullValue: nil,
+				Format: func(s string) *string {
+					return &s
+				}("yyyy-MM-dd HH:mm:ss")},
+			"updated_at": types.DateProperty{
+				NullValue: nil,
+				Format: func(s string) *string {
+					return &s
+				}("yyyy-MM-dd HH:mm:ss")},
 
 			"cover":         types.TextProperty{},
 			"title":         types.TextProperty{},
 			"keyword":       types.KeywordProperty{},
 			"category":      types.KeywordProperty{},
-            "tags":          types.KeywordProperty{},
+			"tags":          types.KeywordProperty{},
 			"abstract":      types.TextProperty{},
 			"content":       types.TextProperty{},
 			"visible_range": types.KeywordProperty{},

@@ -30,8 +30,10 @@ type ArticleUpdateReq struct {
 
 // ArticleListReq 查询文章请求体
 type ArticleListReq struct {
+	ID           *string `json:"id" form:"id"`                  // ID
 	Title        *string `json:"title" form:"title"`            // 标题
-	Category     *string `json:"category" form:"category"`      // 列表/专栏
+	Category     *string `json:"category" form:"category"`      // 专栏
+	Tag          *string `json:"tag" form:"tag"`                // 标签
 	Abstract     *string `json:"abstract" form:"abstract"`      // 摘要
 	VisibleRange uint    `json:"visible_range" bind:"required"` // 1-"全部可见"/2-"仅我可见"
 	PageInfo             // 分页信息

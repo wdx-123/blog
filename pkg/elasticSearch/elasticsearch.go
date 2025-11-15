@@ -6,7 +6,7 @@ import (
 	"errors"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/core/bulk"
 	"personal_blog/global"
-	"personal_blog/internal/model/elasticsearch"
+	elasticsearch "personal_blog/internal/model/elasticsearch"
 
 	"github.com/elastic/go-elasticsearch/v8/typedapi/core/update"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
@@ -102,4 +102,62 @@ func Delete(
 						Index(elasticsearch.ArticleIndex()).
 						Refresh(refresh.True).Do(ctx)
 	return err
+}
+
+// EsPagination 实现 Elasticsearch 数据分页查询
+func EsPagination(
+	ctx context.Context,
+	option elasticsearch.EsOption,
+) (list []types.Hit, total int64, err error) {
+	// 1、设置分页的默认值
+	if option.Page < 1 {
+		option.Page = 1 // 页码不能小于1，默认为1
+	}
+	if option.PageSize < 1 {
+		option.PageSize = 10 // 每页记录数不能小于1，默认为10
+	}
+
+	// 2、设置 Elasticsearch 查询的分页值
+	// 2.a 计算从哪一条记录开始
+	from := (option.Page - 1) * option.PageSize
+	// 2.b 设置每页的记录数
+	option.Request.Size = &option.PageSize
+	// 2.c 设置起始记录位置
+	option.Request.From = &from
+
+	// 3、设置返回字段（若调用方未指定，则按 IncludeContent 构造默认字段集）
+	if len(option.SourceIncludes) == 0 {
+		base := []string{
+			"created_at",
+			"updated_at",
+			"cover",
+			"title",
+			"keyword",
+			"category",
+			"tags",
+			"abstract",
+			"visible_range",
+			"views",
+			"comments",
+			"likes"}
+		if option.IncludeContent {
+			base = append(base, "content")
+		}
+		option.SourceIncludes = base
+	}
+
+	// 4、执行 Elasticsearch 搜索查询
+	res, err := global.ESClient.Search().
+		Index(option.Index).                       // 指定索引
+		Request(option.Request).                   // 应用查询请求
+		SourceIncludes_(option.SourceIncludes...). // 设置需要包含的字段
+		Do(ctx)                                    // 执行查询
+	if err != nil {
+		return nil, 0, err // 如果查询失败，返回错误
+	}
+
+	// 提取查询结果
+	list = res.Hits.Hits         // 获取查询结果中的文档
+	total = res.Hits.Total.Value // 获取符合条件的文档总数
+	return list, total, nil      // 返回查询结果和总文档数
 }

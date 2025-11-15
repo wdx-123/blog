@@ -34,7 +34,7 @@ func (a *ArticleCtrl) CreateArticle(ctx *gin.Context) {
 			Failed("创建文章失败", nil)
 		return
 	}
-	// 发布牛
+	// 发布
 	response.NewResponse[any, any](ctx).
 		SetCode(global.StatusOK).
 		Success("文章已创建", map[string]any{
@@ -47,6 +47,7 @@ func (a *ArticleCtrl) CreateArticle(ctx *gin.Context) {
 
 // DeleteArticle 删除文章
 func (a *ArticleCtrl) DeleteArticle(ctx *gin.Context) {
+	// 1、获取请求结构体
 	var req request.ArticleDeleteReq
 	err := ctx.ShouldBindJSON(&req)
 	if err != nil {
@@ -56,6 +57,7 @@ func (a *ArticleCtrl) DeleteArticle(ctx *gin.Context) {
 			Failed("绑定数据错误", nil)
 		return
 	}
+	// 2、删除文章
 	err = a.articleSvc.ArticleDelete(ctx, &req)
 	if err != nil {
 		global.Log.Error("删除文章失败", zap.Strings("ids", req.IDs), zap.Error(err))
@@ -64,6 +66,7 @@ func (a *ArticleCtrl) DeleteArticle(ctx *gin.Context) {
 			Failed("删除文章失败", nil)
 		return
 	}
+	// 3、返回数据
 	response.NewResponse[any, any](ctx).
 		SetCode(global.StatusOK).
 		Success("删除成功", map[string]any{
@@ -72,26 +75,55 @@ func (a *ArticleCtrl) DeleteArticle(ctx *gin.Context) {
 }
 
 // ArticleUpdate 更新文章
-func (a *ArticleCtrl) ArticleUpdate(c *gin.Context) {
-    var req request.ArticleUpdateReq
-    if err := c.ShouldBindJSON(&req); err != nil {
-        global.Log.Error("绑定数据错误", zap.Error(err))
-        response.NewResponse[any, any](c).
-            SetCode(global.StatusBadRequest).
-            Failed("绑定数据错误", nil)
-        return
-    }
-    if err := a.articleSvc.UpdateArticle(c.Request.Context(), req); err != nil {
-        global.Log.Error("更新文章失败", zap.String("id", req.ID), zap.Error(err))
-        response.NewResponse[any, any](c).
-            SetCode(global.StatusInternalServerError).
-            Failed("更新文章失败", nil)
-        return
-    }
-    response.NewResponse[any, any](c).
-        SetCode(global.StatusOK).
-        Success("更新成功", map[string]any{
-            "id": req.ID,
-            "title": req.Title,
-        })
+func (a *ArticleCtrl) ArticleUpdate(ctx *gin.Context) {
+	// 1、获取请求结构体
+	var req request.ArticleUpdateReq
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		global.Log.Error("绑定数据错误", zap.Error(err))
+		response.NewResponse[any, any](ctx).
+			SetCode(global.StatusBadRequest).
+			Failed("绑定数据错误", nil)
+		return
+	}
+	// 2、更新文章
+	if err := a.articleSvc.UpdateArticle(ctx.Request.Context(), req); err != nil {
+		global.Log.Error("更新文章失败", zap.String("id", req.ID), zap.Error(err))
+		response.NewResponse[any, any](ctx).
+			SetCode(global.StatusInternalServerError).
+			Failed("更新文章失败", nil)
+		return
+	}
+	// 3、返回数据
+	response.NewResponse[any, any](ctx).
+		SetCode(global.StatusOK).
+		Success("更新成功", map[string]any{
+			"id":    req.ID,
+			"title": req.Title,
+		})
+}
+
+// ArticleList 获取文章列表
+func (a *ArticleCtrl) ArticleList(ctx *gin.Context) {
+	// 1、获取请求结构体
+	var req request.ArticleListReq
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		global.Log.Error("绑定数据错误", zap.Error(err))
+		response.NewResponse[any, any](ctx).
+			SetCode(global.StatusBadRequest).
+			Failed("绑定数据错误", nil)
+		return
+	}
+	// 2、获取数据
+	respData, err := a.articleSvc.GetArticleList(ctx.Request.Context(), req)
+	if err != nil {
+		global.Log.Error("获取文章列表失败", zap.Error(err))
+		response.NewResponse[any, any](ctx).
+			SetCode(global.StatusInternalServerError).
+			Failed("获取文章列表失败", nil)
+		return
+	}
+	// 3、返回数据
+	response.NewResponse[any, any](ctx).
+		SetCode(global.StatusOK).
+		Success("获取成功", respData)
 }
